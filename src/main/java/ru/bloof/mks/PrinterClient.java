@@ -51,7 +51,7 @@ public class PrinterClient implements Closeable {
         if (cnxn == null) {
             Socket s = new Socket();
             s.setSoTimeout(5000);
-            s.connect(addr);
+            s.connect(addr, 1000);
             this.cnxn = cnxn = new PrinterConnection(s);
         }
         return cnxn;

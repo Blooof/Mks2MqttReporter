@@ -24,8 +24,8 @@ public class AppMain {
 
         try (PrinterClient pc = new PrinterClient(PRINTER_HOST, PRINTER_PORT);
              MqttProxy mqttProxy = new MqttProxy(MQTT_SERVER, MQTT_PUBLISHER)) {
-            executor.scheduleWithFixedDelay(() -> sendTempStatus(pc, mqttProxy), 5, 5, TimeUnit.SECONDS);
-            executor.scheduleWithFixedDelay(() -> sendPrintStatus(pc, mqttProxy), 30, 30, TimeUnit.SECONDS);
+            executor.scheduleWithFixedDelay(() -> sendTempStatus(pc, mqttProxy), 0, 5, TimeUnit.SECONDS);
+            executor.scheduleWithFixedDelay(() -> sendPrintStatus(pc, mqttProxy), 0, 30, TimeUnit.SECONDS);
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     executor.awaitTermination(1, TimeUnit.HOURS);
@@ -64,23 +64,23 @@ public class AppMain {
             if (jobPercentResult != null) {
                 mqttProxy.send("job_percent", jobPercentResult.getPercent());
             }
-        } catch (MqttException e) {
+        } catch (Exception e) {
             Logger.warn(e, "Cannot send print status");
         }
     }
 
     private static void sendTempStatus(PrinterClient pc, MqttProxy mqttProxy) {
-        GetTempReportCommand cmd = new GetTempReportCommand();
-        GetTempReportResult result = pc.executeCommand(cmd);
-        if (result != null) {
-            try {
+        try {
+            GetTempReportCommand cmd = new GetTempReportCommand();
+            GetTempReportResult result = pc.executeCommand(cmd);
+            if (result != null) {
                 mqttProxy.send("curExtruderTemp", result.getCurrentExtruderTemp());
                 mqttProxy.send("curBedTemp", result.getCurrentBedTemp());
                 mqttProxy.send("tgtExtruderTemp", result.getTargetExtruderTemp());
                 mqttProxy.send("tgtBedTemp", result.getTargetBedTemp());
-            } catch (MqttException e) {
-                Logger.warn(e, "Cannot send temp report");
             }
+        } catch (Exception e) {
+            Logger.warn(e, "Cannot send temp report");
         }
     }
 }
