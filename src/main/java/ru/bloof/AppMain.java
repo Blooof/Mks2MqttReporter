@@ -1,7 +1,8 @@
 package ru.bloof;
 
-import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pmw.tinylog.Logger;
+import ru.bloof.conf.AppConfig;
+import ru.bloof.conf.ArgsParser;
 import ru.bloof.mks.PrinterClient;
 import ru.bloof.mks.cmd.*;
 import ru.bloof.mqtt.MqttProxy;
@@ -11,19 +12,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Hello world!
+ * Main class
  */
 public class AppMain {
-    private static final String PRINTER_HOST = "";
-    private static final int PRINTER_PORT = 8080;
-    private static final String MQTT_SERVER = "";
-    private static final String MQTT_PUBLISHER = "Mks2MqttReporter/1.0.0";
+    public static void main(String[] args) throws Exception {
+        AppConfig config = new ArgsParser().parse(args);
+        if (config == null) {
+            return;
+        }
 
-    public static void main(String[] args) throws MqttException {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-        try (PrinterClient pc = new PrinterClient(PRINTER_HOST, PRINTER_PORT);
-             MqttProxy mqttProxy = new MqttProxy(MQTT_SERVER, MQTT_PUBLISHER)) {
+        try (PrinterClient pc = new PrinterClient(config);
+             MqttProxy mqttProxy = new MqttProxy(config)) {
             executor.scheduleWithFixedDelay(() -> sendTempStatus(pc, mqttProxy), 0, 5, TimeUnit.SECONDS);
             executor.scheduleWithFixedDelay(() -> sendPrintStatus(pc, mqttProxy), 0, 30, TimeUnit.SECONDS);
             while (!Thread.currentThread().isInterrupted()) {
@@ -33,6 +33,8 @@ public class AppMain {
                     Thread.currentThread().interrupt();
                 }
             }
+        } finally {
+            executor.shutdownNow();
         }
     }
 

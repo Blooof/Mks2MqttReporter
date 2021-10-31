@@ -1,5 +1,7 @@
 package ru.bloof.mks;
 
+import ru.bloof.conf.AppConfig;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,8 +15,8 @@ public class PrinterClient implements Closeable {
 
     private PrinterConnection cnxn;
 
-    public PrinterClient(String host, int port) {
-        this.addr = new InetSocketAddress(host, port);
+    public PrinterClient(AppConfig config) {
+        this.addr = new InetSocketAddress(config.printerHost, config.printerPort);
     }
 
     public synchronized <T> T executeCommand(PrinterCommand<T> command) {

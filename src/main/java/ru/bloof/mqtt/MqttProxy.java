@@ -4,6 +4,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.pmw.tinylog.Logger;
+import ru.bloof.conf.AppConfig;
 
 import java.io.Closeable;
 
@@ -11,12 +12,13 @@ import java.io.Closeable;
  * @author <a href="mailto:blloof@gmail.com">Oleg Larionov</a>
  */
 public class MqttProxy implements Closeable {
-    private static final String MQTT_TOPIC_PREFIX = "home/ghost4s/";
-
+    private final AppConfig appConfig;
     private final MqttClient mqttClient;
 
-    public MqttProxy(String server, String publisher) throws MqttException {
-        mqttClient = new MqttClient(server, publisher);
+    public MqttProxy(AppConfig config) throws MqttException {
+        this.appConfig = config;
+
+        mqttClient = new MqttClient(config.mqttServer, config.mqttPublisher);
         MqttConnectOptions options = new MqttConnectOptions();
         options.setAutomaticReconnect(true);
         options.setCleanSession(true);
@@ -26,7 +28,7 @@ public class MqttProxy implements Closeable {
     }
 
     public void send(String statId, Object value) throws MqttException {
-        String topic = MQTT_TOPIC_PREFIX + statId;
+        String topic = appConfig.topicPrefix + statId;
         Logger.info("Sending {} to topic {}", value, topic);
         mqttClient.publish(topic, value.toString().getBytes(), 0, false);
     }
